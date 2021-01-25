@@ -1,9 +1,4 @@
 <?php 
-/*
-TODO:
-    - html template
-*/
-
 # CONSTANTS:
 $TABLE_NAME = 'Books';
 # TABLE COLUMNS:
@@ -15,20 +10,28 @@ $COL_YEAR = 'book_year';
 $COL_PICT = 'picture_url';
 $COL_RATE = 'rating';
 $COL_DESC = 'description';
-# GET ARRAY:
+# PAGE STATE:
+$PS_NO_ERROR = "";
+$PS_ERROR_MSG = "";
+# ROUTING:
+$ROUT_INDEX = "/index.php";
 $_GET_ID = 'id';
+$ROUT_BOOK_DETAILS = "/index.php?" . $_GET_ID . "=";
+
+
+# ------------------------------------------------------ 
+# ---------------------- CONTROL ----------------------- 
+# ------------------------------------------------------ 
 
 # CONNECT TO DATABASE:
 $sqlcon = new mysqli('localhost', 'user', 'qQ1wW2eE3!', 'php');
 
 # HANDLE DB CONNECION ERROR:
 if ($sqlcon -> connect_error) {
-    echo "Something went wrong with database connection.<br>";
-    #echo "Error: " . mysqli_connect_error() . "<br>";
-    exit;
+    $PS_ERROR_MSG = "Something went wrong with database connection.<br>";
 }
 
-# IF BOOK ID IN GET ARRAY, DISPLAY BOOK WITH THAT ID:
+# IF BOOK IS IN GET ARRAY, DISPLAY BOOK WITH THAT ID:
 if(filter_input(INPUT_GET, $_GET_ID) != ""){
     $book_id = filter_input(INPUT_GET, $_GET_ID);
     # QUERY BOOK:
@@ -37,24 +40,10 @@ if(filter_input(INPUT_GET, $_GET_ID) != ""){
 
     # CHECK IF NO ERROR:
     if(!$sqlres){
-        echo "Something went wrong with book request.<br>";    
-    } elseif($sqlres->num_rows == 1){
-        $rec = $sqlres->fetch_assoc();
-        echo "<table>";
-        echo "<tr>"; 
-        echo "<th>" . $rec[$COL_ID] . "</th>"; 
-        echo "<th><a href=\"http://127.0.0.1/index.php?id=" . $rec[$COL_ID] . "\">" . $rec[$COL_NAME] . "</a></th>"; 
-        echo "<th>" . $rec[$COL_AUTH] . "</th>"; 
-        echo "<th>" . $rec[$COL_PUBL] . "</th>"; 
-        echo "<th>" . $rec[$COL_YEAR] . "</th>"; 
-        echo "<th><img src=\"" . $rec[$COL_PICT] . "\"></th>"; 
-        echo "<th>" . $rec[$COL_RATE] . "</th>"; 
-        echo "<th>" . $rec[$COL_DESC] . "</th>"; 
-        echo "</tr>"; 
-        echo "</table>";
-    } else {
-            echo "Wrong page.<br>";
-        }
+        $PS_ERROR_MSG = "Something went wrong with book request.<br>";    
+    } elseif($sqlres->num_rows != 1){
+        $PS_ERROR_MSG = "Wrong page link.<br>";
+    }
 } else {
     # QUERY ALL BOOKS:
     $sqlquer = "SELECT * FROM " . $TABLE_NAME;
@@ -62,9 +51,29 @@ if(filter_input(INPUT_GET, $_GET_ID) != ""){
 
     # CHECK IF NO ERROR:
     if(!$sqlres){
-        echo "Something went wrong with getting books from database.<br>";    
-    } elseif($sqlres->num_rows > 0){
-        # CREATE SIMPLE TABLE IN FOR CYCLE:
+        $PS_ERROR_MSG = "Something went wrong with getting books from database.<br>";    
+    } elseif($sqlres->num_rows == 0){
+        $PS_ERROR_MSG = "No books to display.<br>";
+    }
+}
+
+# CLOSE CONNECTION:
+$sqlcon->close();
+?>
+<!-- ------------------------------------------------------ -->
+<!-- ------------------------ VIEW ------------------------ -->
+<!-- ------------------------------------------------------ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Books database</title>
+</head>
+<body>
+    <?php
+    if ($PS_ERROR_MSG != $PS_NO_ERROR){
+        echo $PS_ERROR_MSG;
+    } else {
         echo "<table>";
         echo "<tr>"; 
         echo "<th>Book id:</th>"; 
@@ -79,7 +88,7 @@ if(filter_input(INPUT_GET, $_GET_ID) != ""){
         while($rec = $sqlres->fetch_assoc()){
                 echo "<tr>"; 
                 echo "<th>" . $rec[$COL_ID] . "</th>"; 
-                echo "<th><a href=\"http://127.0.0.1/index.php?id=" . $rec[$COL_ID] . "\">" . $rec[$COL_NAME] . "</a></th>"; 
+                echo "<th><a href=\"" . $ROUT_BOOK_DETAILS . $rec[$COL_ID] . "\">" . $rec[$COL_NAME] . "</a></th>"; 
                 echo "<th>" . $rec[$COL_AUTH] . "</th>"; 
                 echo "<th>" . $rec[$COL_PUBL] . "</th>"; 
                 echo "<th>" . $rec[$COL_YEAR] . "</th>"; 
@@ -89,11 +98,7 @@ if(filter_input(INPUT_GET, $_GET_ID) != ""){
                 echo "</tr>"; 
             }
             echo "</table>";
-    } else {
-        echo "No books to display.<br>";
     }
-}
-
-# CLOSE CONNECTION:
-$sqlcon->close();
-?>
+    ?>
+</body>
+</html> 
