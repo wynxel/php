@@ -1,7 +1,6 @@
 <?php 
-# CONSTANTS:
+# DB CONSTANTS:
 $TABLE_NAME = 'Books';
-# TABLE COLUMNS:
 $COL_ID = 'id';
 $COL_NAME = 'book_name';
 $COL_AUTH = 'book_author';
@@ -13,11 +12,17 @@ $COL_DESC = 'description';
 # PAGE STATE:
 $PS_NO_ERROR = "";
 $PS_ERROR_MSG = "";
-# ROUTING:
-$ROUT_INDEX = "/index.php";
-$_GET_ID = 'id';
-$ROUT_BOOK_DETAILS = "/index.php?" . $_GET_ID . "=";
 
+
+# ------------------------------------------------------ 
+# ---------------------- ROUTING ----------------------- 
+# ------------------------------------------------------ 
+$ROUT_INDEX = "/index.php";
+$ROUT_DETAILS = "id";
+
+function redirect_link($from, $to, $val){
+    return $from . "?" . $to . "=" . $val;
+}
 
 # ------------------------------------------------------ 
 # ---------------------- CONTROL ----------------------- 
@@ -32,8 +37,8 @@ if ($sqlcon -> connect_error) {
 }
 
 # IF BOOK IS IN GET ARRAY, DISPLAY BOOK WITH THAT ID:
-if(filter_input(INPUT_GET, $_GET_ID) != ""){
-    $book_id = filter_input(INPUT_GET, $_GET_ID);
+if(filter_input(INPUT_GET, $ROUT_DETAILS) != ""){
+    $book_id = filter_input(INPUT_GET, $ROUT_DETAILS);
     # QUERY BOOK:
     $sqlquer = "SELECT * FROM " . $TABLE_NAME . " WHERE " . $COL_ID . "=" . $book_id;
     $sqlres = $sqlcon->query($sqlquer);
@@ -88,7 +93,7 @@ $sqlcon->close();
         while($rec = $sqlres->fetch_assoc()){
                 echo "<tr>"; 
                 echo "<th>" . $rec[$COL_ID] . "</th>"; 
-                echo "<th><a href=\"" . $ROUT_BOOK_DETAILS . $rec[$COL_ID] . "\">" . $rec[$COL_NAME] . "</a></th>"; 
+                echo "<th><a href=\"" . redirect_link($ROUT_INDEX, $ROUT_DETAILS, $rec[$COL_ID]) . "\">" . $rec[$COL_NAME] . "</a></th>"; 
                 echo "<th>" . $rec[$COL_AUTH] . "</th>"; 
                 echo "<th>" . $rec[$COL_PUBL] . "</th>"; 
                 echo "<th>" . $rec[$COL_YEAR] . "</th>"; 
